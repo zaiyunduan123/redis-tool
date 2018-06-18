@@ -17,19 +17,12 @@ public class RedisProperties {
     private int poolMaxTotal = 1000;
     private int poolMaxIdle = 500;
     private int poolMaxWait = 500;
-    private String address;
     private int connectionPoolSize = 64;
     private int connectionMinimumIdleSize = 10;
     private int slaveConnectionPoolSize = 250;
     private int masterConnectionPoolSize = 250;
+    private String[] sentinelAddresses;
 
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
 
     public int getConnectionPoolSize() {
         return connectionPoolSize;
@@ -71,16 +64,7 @@ public class RedisProperties {
         this.sentinelAddresses = sentinelAddresses;
     }
 
-    public String getMasterName() {
-        return masterName;
-    }
 
-    public void setMasterName(String masterName) {
-        this.masterName = masterName;
-    }
-
-    private String[] sentinelAddresses;
-    private String masterName;
 
     public String getHost() {
         return host;

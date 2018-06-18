@@ -1,13 +1,13 @@
 package com.jesper.common;
 
 import com.alibaba.fastjson.JSON;
+import com.jesper.lock.LockUtil;
 import com.jesper.prefix.KeyPrefix;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -18,9 +18,6 @@ public class RedisUtil {
 
     @Autowired
     private JedisPool jedisPool;
-
-    @Autowired
-    private RedissonClient redissonClient;
 
     /**
      * 从redis连接池获取redis实例
@@ -53,9 +50,9 @@ public class RedisUtil {
             }
             String realKey = prefix.getPrefix() + key;
             int seconds = prefix.expireSeconds();//获取过期时间
-            if(seconds <= 0){
+            if (seconds <= 0) {
                 jedis.set(realKey, str);
-            }else{
+            } else {
                 jedis.setex(realKey, seconds, str);
             }
 
@@ -68,31 +65,31 @@ public class RedisUtil {
 
     /**
      * 删除
-     * */
+     */
     public boolean delete(KeyPrefix prefix, String key) {
         Jedis jedis = null;
         try {
-            jedis =  jedisPool.getResource();
+            jedis = jedisPool.getResource();
             //生成真正的key
-            String realKey  = prefix.getPrefix() + key;
-            long ret =  jedis.del(realKey);
+            String realKey = prefix.getPrefix() + key;
+            long ret = jedis.del(realKey);
             return ret > 0;
-        }finally {
+        } finally {
             returnToPool(jedis);
         }
     }
 
     /**
      * 判断key是否存在
-     * */
+     */
     public <T> boolean exists(KeyPrefix prefix, String key) {
         Jedis jedis = null;
         try {
-            jedis =  jedisPool.getResource();
+            jedis = jedisPool.getResource();
             //生成真正的key
-            String realKey  = prefix.getPrefix() + key;
-            return  jedis.exists(realKey);
-        }finally {
+            String realKey = prefix.getPrefix() + key;
+            return jedis.exists(realKey);
+        } finally {
             returnToPool(jedis);
         }
     }
@@ -100,93 +97,33 @@ public class RedisUtil {
     /**
      * 增加值
      * Redis Incr 命令将 key 中储存的数字值增一。    如果 key 不存在，那么 key 的值会先被初始化为 0 ，然后再执行 INCR 操作
-     * */
+     */
     public <T> Long incr(KeyPrefix prefix, String key) {
         Jedis jedis = null;
         try {
-            jedis =  jedisPool.getResource();
+            jedis = jedisPool.getResource();
             //生成真正的key
-            String realKey  = prefix.getPrefix() + key;
-            return  jedis.incr(realKey);
-        }finally {
+            String realKey = prefix.getPrefix() + key;
+            return jedis.incr(realKey);
+        } finally {
             returnToPool(jedis);
         }
     }
 
     /**
      * 减少值
-     * */
+     */
     public <T> Long decr(KeyPrefix prefix, String key) {
         Jedis jedis = null;
         try {
-            jedis =  jedisPool.getResource();
+            jedis = jedisPool.getResource();
             //生成真正的key
-            String realKey  = prefix.getPrefix() + key;
-            return  jedis.decr(realKey);
-        }finally {
+            String realKey = prefix.getPrefix() + key;
+            return jedis.decr(realKey);
+        } finally {
             returnToPool(jedis);
         }
     }
-
-
-
-    /**
-     * 上锁
-     * @param lockKey
-     */
-    public  void lock(String lockKey) {
-        RLock lock = redissonClient.getLock(lockKey);
-        lock.lock();
-    }
-
-    /**
-     * 释放锁
-     * @param lockKey
-     */
-    public  void unlock(String lockKey) {
-        RLock lock = redissonClient.getLock(lockKey);
-        lock.unlock();
-    }
-
-    /**
-     * 删除锁
-     * @param lockKey
-     */
-    public  void deleteLock(String lockKey) {
-        RLock lock = redissonClient.getLock(lockKey);
-        lock.delete();
-    }
-
-    /**
-     * 带超时的锁
-     * @param lockKey
-     * @param timeout 超时时间   单位：秒
-     */
-    public  void lock(String lockKey, int timeout) {
-        RLock lock = redissonClient.getLock(lockKey);
-        lock.lock(timeout, TimeUnit.SECONDS);
-    }
-
-    /**
-     * 带超时的锁
-     * @param lockKey
-     * @param unit 时间单位
-     * @param timeout 超时时间
-     */
-    public  void lock(String lockKey, TimeUnit unit , int timeout) {
-        RLock lock = redissonClient.getLock(lockKey);
-        lock.lock(timeout, unit);
-    }
-
-    /**
-     * 是否已经存在锁
-     * @param lockKey
-     * @return
-     */
-    public  boolean isExistLock(String lockKey){
-        return redissonClient.getLock(lockKey).isExists();
-    }
-
 
 
     private <T> String beanToString(T value) {
@@ -225,6 +162,64 @@ public class RedisUtil {
         if (jedis != null) {
             jedis.close();//不是关闭，只是返回连接池
         }
+    }
+
+    /**
+     * 上锁
+     *
+     * @param lockKey
+     */
+    public void lock(String lockKey) {
+        LockUtil.lock(lockKey);
+    }
+
+    /**
+     * 释放锁
+     *
+     * @param lockKey
+     */
+    public void unlock(String lockKey) {
+        LockUtil.unlock(lockKey);
+    }
+
+    /**
+     * 带超时的锁
+     *
+     * @param lockKey
+     * @param timeout 超时时间   单位：秒
+     */
+    public void lock(String lockKey, int timeout) {
+        LockUtil.lock(lockKey, timeout);
+    }
+
+    /**
+     * 带超时的锁
+     *
+     * @param lockKey
+     * @param unit    时间单位
+     * @param timeout 超时时间
+     */
+    public void lock(String lockKey, TimeUnit unit, int timeout) {
+        LockUtil.lock(lockKey, unit, timeout);
+    }
+
+    /**
+     * 删除锁
+     *
+     * @param lockKey
+     */
+    public void deleteLock(String lockKey) {
+        LockUtil.deleteLock(lockKey);
+    }
+
+    /**
+     * 是否已经存在锁
+     *
+     * @param lockKey
+     * @return
+     */
+    public boolean isExistLock(String lockKey) {
+        return LockUtil.isExistLock(lockKey);
     }
 
 }
