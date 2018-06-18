@@ -1,7 +1,7 @@
 package com.jesper.common;
 
 import com.alibaba.fastjson.JSON;
-import com.jesper.redis.KeyPrefix;
+import com.jesper.prefix.KeyPrefix;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;

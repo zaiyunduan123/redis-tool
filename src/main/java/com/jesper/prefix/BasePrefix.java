@@ -1,4 +1,4 @@
-package com.jesper.redis;
+package com.jesper.prefix;
 
 /**
  * Created by jiangyunxiong on 2018/5/21.
