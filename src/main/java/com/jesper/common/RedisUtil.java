@@ -1,18 +1,26 @@
-package com.jesper.redis;
+package com.jesper.common;
 
 import com.alibaba.fastjson.JSON;
+import com.jesper.redis.KeyPrefix;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import java.util.concurrent.TimeUnit;
 
 /**
  * redis服务
  */
-
+@Service
 public class RedisUtil {
 
     @Autowired
-    JedisPool jedisPool;
+    private JedisPool jedisPool;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
     /**
      * 从redis连接池获取redis实例
@@ -119,6 +127,66 @@ public class RedisUtil {
             returnToPool(jedis);
         }
     }
+
+
+
+    /**
+     * 上锁
+     * @param lockKey
+     */
+    public  void lock(String lockKey) {
+        RLock lock = redissonClient.getLock(lockKey);
+        lock.lock();
+    }
+
+    /**
+     * 释放锁
+     * @param lockKey
+     */
+    public  void unlock(String lockKey) {
+        RLock lock = redissonClient.getLock(lockKey);
+        lock.unlock();
+    }
+
+    /**
+     * 删除锁
+     * @param lockKey
+     */
+    public  void deleteLock(String lockKey) {
+        RLock lock = redissonClient.getLock(lockKey);
+        lock.delete();
+    }
+
+    /**
+     * 带超时的锁
+     * @param lockKey
+     * @param timeout 超时时间   单位：秒
+     */
+    public  void lock(String lockKey, int timeout) {
+        RLock lock = redissonClient.getLock(lockKey);
+        lock.lock(timeout, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 带超时的锁
+     * @param lockKey
+     * @param unit 时间单位
+     * @param timeout 超时时间
+     */
+    public  void lock(String lockKey, TimeUnit unit , int timeout) {
+        RLock lock = redissonClient.getLock(lockKey);
+        lock.lock(timeout, unit);
+    }
+
+    /**
+     * 是否已经存在锁
+     * @param lockKey
+     * @return
+     */
+    public  boolean isExistLock(String lockKey){
+        return redissonClient.getLock(lockKey).isExists();
+    }
+
 
 
     private <T> String beanToString(T value) {
