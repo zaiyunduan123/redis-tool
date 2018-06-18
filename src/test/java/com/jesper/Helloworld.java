@@ -21,7 +21,6 @@ public class Helloworld {
     @Autowired
     private RedisUtil redisUtil;
 
-
     @Test
     @RedisLimit(seconds = 5, maxCount = 5)
     public void test() {
