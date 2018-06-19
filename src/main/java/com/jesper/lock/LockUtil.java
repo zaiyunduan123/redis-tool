@@ -3,8 +3,6 @@ package com.jesper.lock;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by Administrator on 2018/1/5.
- *
  * redis锁工具类
  */
 public class LockUtil {

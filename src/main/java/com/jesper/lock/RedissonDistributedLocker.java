@@ -6,8 +6,6 @@ import org.redisson.api.RedissonClient;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by Administrator on 2018/1/5.
- *
  * 锁的使用接口实例化
  */
 public class RedissonDistributedLocker implements IDistributedLocker {
