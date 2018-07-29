@@ -8,7 +8,10 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import static java.lang.Thread.sleep;
 
 /**
  * redis服务
@@ -29,6 +32,17 @@ public class RedisUtil {
             //对key增加前缀，即可用于分类，也避免key重复
             String realKey = prefix.getPrefix() + key;
             String str = jedis.get(realKey);
+            if (str == null) { //代表缓存值过期
+                String key_mutex = String.valueOf(10000 * Math.random());
+                //设置3min的超时，防止del操作失败的时候，下次缓存过期一直不能load db
+                if (jedis.setnx(key_mutex, String.valueOf(3 * 60)) == 1) {  //代表设置成功
+//                    str = db.get(realKey);
+//                    jedis.set(realKey, str);
+                    jedis.del(key_mutex);
+                } else {  //这个时候代表同时候的其他线程已经load db并回设到缓存了，这时候重试获取缓存值即可
+                    get(prefix, key, clazz);  //重试
+                }
+            }
             T t = stringToBean(str, clazz);
             return t;
         } finally {
