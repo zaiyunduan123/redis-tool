@@ -40,7 +40,7 @@ public class RedisUtil {
     /**
      * 存储对象
      */
-    public <T> Boolean set(KeyPrefix prefix, String key, T value) {
+    public <T> Boolean set(KeyPrefix prefix, String key, T value, boolean isRandomSeconds) {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
@@ -50,6 +50,11 @@ public class RedisUtil {
             }
             String realKey = prefix.getPrefix() + key;
             int seconds = prefix.expireSeconds();//获取过期时间
+            //给原有的失效时间基础上增加一个随机值，降低过期时间的重复率，防止缓存雪崩
+            if (isRandomSeconds) {
+                int randomSeconds = (int) (300 * Math.random() + 60);
+                seconds += randomSeconds;
+            }
             if (seconds <= 0) {
                 jedis.set(realKey, str);
             } else {

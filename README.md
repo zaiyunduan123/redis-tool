@@ -9,9 +9,9 @@
 ```java
     PrefixKey pk = PrefixKey.with(3600, "jyx");
 ```
-添加对象缓存，set(KeyPrefix prefix, String key, T value) ，参数1：前缀对象，参数2：缓存key，参数3：要缓存的对象
+添加对象缓存，set(KeyPrefix prefix, String key, T value, boolean isRandomSeconds) ，参数1：前缀对象，参数2：缓存key，参数3：要缓存的对象 参数3：是否开启避免雪崩（会产生过期时间小误差）
 ```java
-   redisUtil.set(pk, "q", user1);
+   redisUtil.set(pk, "q", user1, true);
 ```
 从缓存获取对象，get(KeyPrefix prefix, String key, Class<T> clazz)，参数1：前缀对象，参数2：缓存key，参数3：对象类型
 ```java
