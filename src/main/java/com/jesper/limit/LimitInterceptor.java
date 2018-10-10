@@ -36,7 +36,7 @@ public class LimitInterceptor extends HandlerInterceptorAdapter {
             PrefixKey pk = PrefixKey.with(seconds, "limit");
             Integer count = redisUtil.get(pk, key, Integer.class);
             if (count == null) {
-                redisUtil.set(pk, key, 1);
+                redisUtil.set(pk, key, 1, false);
             } else if (count < maxCount) {
                 redisUtil.incr(pk, key);
             } else {
